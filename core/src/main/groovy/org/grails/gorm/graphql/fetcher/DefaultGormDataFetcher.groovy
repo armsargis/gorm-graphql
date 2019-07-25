@@ -3,7 +3,6 @@ package org.grails.gorm.graphql.fetcher
 import grails.gorm.DetachedCriteria
 import grails.gorm.multitenancy.Tenants
 import grails.gorm.transactions.GrailsTransactionTemplate
-import grails.gorm.transactions.TransactionService
 import graphql.schema.DataFetcher
 import graphql.schema.DataFetchingEnvironment
 import groovy.transform.CompileStatic
@@ -17,15 +16,14 @@ import org.grails.datastore.mapping.model.PersistentProperty
 import org.grails.datastore.mapping.model.types.Association
 import org.grails.datastore.mapping.multitenancy.MultiTenantCapableDatastore
 import org.grails.datastore.mapping.transactions.CustomizableRollbackTransactionAttribute
+import org.grails.datastore.mapping.transactions.TransactionCapableDatastore
 import org.grails.gorm.graphql.entity.EntityFetchOptions
 import org.springframework.transaction.PlatformTransactionManager
-
-import java.lang.reflect.Method
 
 /**
  * A generic class to assist with querying entities with GraphQL
  *
- * @param <T> The domain returnType to query
+ * @param < T >  The domain returnType to query
  * @author James Kleeh
  * @since 1.0.0
  */
@@ -68,7 +66,7 @@ abstract class DefaultGormDataFetcher<T> implements DataFetcher<T> {
     }
 
     protected Object loadEntity(PersistentEntity entity, Object argument) {
-        GormEnhancer.findStaticApi(entity.javaClass).load((Serializable)argument)
+        GormEnhancer.findStaticApi(entity.javaClass).load((Serializable) argument)
     }
 
     protected Map<String, Object> getIdentifierValues(DataFetchingEnvironment environment) {
@@ -77,9 +75,8 @@ abstract class DefaultGormDataFetcher<T> implements DataFetcher<T> {
         PersistentProperty identity = entity.identity
         if (identity != null) {
             idProperties.put(identity.name, environment.getArgument(identity.name))
-        }
-        else if (entity.compositeIdentity != null) {
-            for (PersistentProperty p: entity.compositeIdentity) {
+        } else if (entity.compositeIdentity != null) {
+            for (PersistentProperty p : entity.compositeIdentity) {
                 Object value
                 Object argument = environment.getArgument(p.name)
                 if (associations.containsKey(p.name)) {
@@ -98,7 +95,7 @@ abstract class DefaultGormDataFetcher<T> implements DataFetcher<T> {
     protected DetachedCriteria buildCriteria(DataFetchingEnvironment environment) {
         Map<String, Object> idProperties = getIdentifierValues(environment)
         new DetachedCriteria(entity.javaClass).build {
-            for (Map.Entry<String, Object> prop: idProperties) {
+            for (Map.Entry<String, Object> prop : idProperties) {
                 eq(prop.key, prop.value)
             }
         }
@@ -111,18 +108,16 @@ abstract class DefaultGormDataFetcher<T> implements DataFetcher<T> {
     protected Object withTransaction(boolean readOnly, Closure closure) {
         Datastore datastore
         if (entity.multiTenant && this.datastore instanceof MultiTenantCapableDatastore) {
-            MultiTenantCapableDatastore multiTenantCapableDatastore = (MultiTenantCapableDatastore)this.datastore
+            MultiTenantCapableDatastore multiTenantCapableDatastore = (MultiTenantCapableDatastore) this.datastore
             Serializable currentTenantId = Tenants.currentId(multiTenantCapableDatastore)
             datastore = multiTenantCapableDatastore.getDatastoreForTenantId(currentTenantId)
-        }
-        else {
+        } else {
             datastore = this.datastore
         }
 
         //To support older versions of GORM
         try {
-            Method getTransactionManager = datastore.class.getMethod('getTransactionManager', (Class<?>[]) null)
-            PlatformTransactionManager transactionManager = (PlatformTransactionManager)getTransactionManager.invoke(datastore)
+            PlatformTransactionManager transactionManager = getTransactionManager(datastore)
             CustomizableRollbackTransactionAttribute transactionAttribute = new CustomizableRollbackTransactionAttribute()
             transactionAttribute.setReadOnly(readOnly)
             new GrailsTransactionTemplate(transactionManager, transactionAttribute).execute(closure)
@@ -138,6 +133,13 @@ abstract class DefaultGormDataFetcher<T> implements DataFetcher<T> {
         transactionAttribute.setReadOnly(readOnly)
         txService.withTransaction(transactionAttribute, closure)
          */
+    }
+
+    private static PlatformTransactionManager getTransactionManager(Datastore datastore) {
+        if (!datastore instanceof TransactionCapableDatastore) {
+            throw new IllegalArgumentException("Domain mapped DataStore should be transactional")
+        }
+        return ((TransactionCapableDatastore) datastore).getTransactionManager()
     }
 
     abstract T get(DataFetchingEnvironment environment)
