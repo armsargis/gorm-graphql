@@ -52,6 +52,7 @@ class EntityDataFetcher<T> extends DefaultGormDataFetcher<T> implements ReadingG
             boolean skipCollections = queryArgs.containsKey(MAX) || queryArgs.containsKey(OFFSET)
 
             queryArgs.putAll(getFetchArguments(environment, skipCollections))
+            queryArgs.putAll(getFetcherQueryArguments(environment))
 
             executeQuery(environment, queryArgs)
         }

@@ -20,10 +20,12 @@ import org.grails.datastore.mapping.transactions.TransactionCapableDatastore
 import org.grails.gorm.graphql.entity.EntityFetchOptions
 import org.springframework.transaction.PlatformTransactionManager
 
+import static java.util.Collections.emptyMap
+
 /**
  * A generic class to assist with querying entities with GraphQL
  *
- * @param < T >  The domain returnType to query
+ * @param < T >        The domain returnType to query
  * @author James Kleeh
  * @since 1.0.0
  */
@@ -37,13 +39,19 @@ abstract class DefaultGormDataFetcher<T> implements DataFetcher<T> {
     protected EntityFetchOptions entityFetchOptions
     protected GormStaticApi staticApi
     protected Datastore datastore
+    protected Map<String, Object> config
 
     DefaultGormDataFetcher(PersistentEntity entity) {
-        this(entity, null)
+        this(entity, emptyMap(), null)
     }
 
-    DefaultGormDataFetcher(PersistentEntity entity, String projectionName) {
+    DefaultGormDataFetcher(PersistentEntity entity, Map<String, Object> config) {
+        this(entity, config, null)
+    }
+
+    DefaultGormDataFetcher(PersistentEntity entity, Map<String, Object> config, String projectionName) {
         this.entity = entity
+        this.config = config
         this.propertyName = projectionName
         this.entityFetchOptions = new EntityFetchOptions(entity, projectionName)
         this.staticApi = GormEnhancer.findStaticApi(entity.javaClass)
@@ -63,6 +71,10 @@ abstract class DefaultGormDataFetcher<T> implements DataFetcher<T> {
         }
 
         entityFetchOptions.getFetchArgument(joinProperties)
+    }
+
+    protected Map getFetcherQueryArguments(DataFetchingEnvironment environment) {
+        return config
     }
 
     protected Object loadEntity(PersistentEntity entity, Object argument) {
@@ -102,7 +114,10 @@ abstract class DefaultGormDataFetcher<T> implements DataFetcher<T> {
     }
 
     protected GormEntity queryInstance(DataFetchingEnvironment environment) {
-        buildCriteria(environment).get(getFetchArguments(environment))
+        Map<String, Object> fetchArguments = getFetchArguments(environment)
+        fetchArguments.putAll(getFetcherQueryArguments(environment))
+
+        buildCriteria(environment).get(fetchArguments)
     }
 
     protected Object withTransaction(boolean readOnly, Closure closure) {

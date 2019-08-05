@@ -85,6 +85,7 @@ Brief summary/description of the plugin.
             paginationResponseHandler = ref("graphQLPaginationResponseHandler")
             serviceManager = ref("graphQLServiceManager")
 
+            fetcherQueriesArguments = '#{grailsGraphQLConfiguration.getFetcherQueriesArguments()}'
             dateFormats = '#{grailsGraphQLConfiguration.getDateFormats()}'
             dateFormatLenient = '#{grailsGraphQLConfiguration.getDateFormatLenient()}'
             listArguments = '#{grailsGraphQLConfiguration.getListArguments()}'

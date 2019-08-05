@@ -3,6 +3,7 @@ package org.grails.gorm.graphql.plugin
 import grails.config.Config
 import grails.core.GrailsApplication
 import groovy.transform.CompileStatic
+import org.grails.gorm.graphql.fetcher.GraphQLDataFetcherType
 import org.grails.plugins.databinding.DataBindingGrailsPlugin
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.context.properties.ConfigurationProperties
@@ -25,6 +26,8 @@ class GrailsGraphQLConfiguration {
     Map<String, Class> listArguments
 
     Boolean browser
+
+    Map<GraphQLDataFetcherType, Map> fetcherQueriesArguments = [:]
 
     @PostConstruct
     void init() {
