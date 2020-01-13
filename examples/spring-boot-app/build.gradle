@@ -24,7 +24,7 @@ dependencies {
 	compile "org.hibernate:hibernate-core:5.1.0.Final"
 	compile "org.hibernate:hibernate-ehcache:5.1.0.Final"
 	compile "org.grails:grails-core:$grailsVersion"
-	compile project(":gorm-graphql")
+	compile project(":gorm-graphql-core")
 
 	runtime "com.h2database:h2:1.4.192"
 	runtime "org.apache.tomcat:tomcat-jdbc:8.5.0"

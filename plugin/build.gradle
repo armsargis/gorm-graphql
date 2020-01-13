@@ -27,7 +27,7 @@ dependencies {
     testCompile "cglib:cglib-nodep:3.2.5"
     profile "org.grails.profiles:web-plugin"
 
-    compile project(":gorm-graphql")
+    compile project(":gorm-graphql-core")
 }
 
 compileGsonViews {

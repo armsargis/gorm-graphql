@@ -10,5 +10,5 @@ include 'examples/spring-boot-app'
 
 rootProject.name = 'gorm-graphql-root'
 
-findProject(':core').name = 'gorm-graphql'
+findProject(':core').name = 'gorm-graphql-core'
 findProject(':plugin').name = 'grails-plugin-gorm-graphql'
